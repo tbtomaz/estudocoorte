@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Navegação de pacientes oncológicos: apresentação interativa</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#eef3f4;--sf:#fff;--ink:#14262c;--mut:#566a71;--ln:#d3dde0;--ac:#0b6676;--acf:#fff;--soft:#e0eff1;--okb:#e1f3e6;--ok:#1b6b39;--wb:#fcefd9;--w:#8a5206}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1f;--sf:#162329;--ink:#e6eef1;--mut:#9bb0b8;--ln:#2b3d45;--ac:#6cc4d3;--acf:#0f1a1f;--soft:#1c3640;--okb:#173627;--ok:#7fd09a;--wb:#3a2c15;--w:#f0c27a}}
+:root[data-theme="dark"]{--bg:#0f1a1f;--sf:#162329;--ink:#e6eef1;--mut:#9bb0b8;--ln:#2b3d45;--ac:#6cc4d3;--acf:#0f1a1f;--soft:#1c3640;--okb:#173627;--ok:#7fd09a;--wb:#3a2c15;--w:#f0c27a}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Source Serif 4",Georgia,serif;line-height:1.25;margin:0}
+a{color:var(--ac)}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 18px 60px}
+.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin-bottom:12px}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dots button{width:26px;height:8px;border:0;border-radius:4px;background:var(--ln);cursor:pointer;padding:0}
+.dots button[aria-current="true"]{background:var(--ac)}
+button.b{font:inherit;font-size:.9rem;background:var(--sf);color:var(--ink);border:1px solid var(--ln);border-radius:6px;padding:6px 12px;cursor:pointer}
+button.b.p{background:var(--ac);color:var(--acf);border-color:var(--ac)}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.slide{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:26px 28px;min-height:420px}
+.slide h2{font-size:1.65rem;margin-bottom:14px}
+.cover{background:var(--ac);color:var(--acf);border-color:var(--ac)}
+.cover a{color:var(--acf)}.cover p{margin:3px 0}
+.cover h2{font-size:1.9rem}
+.sec{color:var(--mut);font-size:.9rem;margin-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:10px 0}
+.box{border:1px solid var(--ln);border-left:4px solid var(--ac);border-radius:6px;padding:10px 14px}
+.box b{display:block;font-family:"Source Serif 4",Georgia,serif;font-size:1.3rem}
+.big{font-family:"Source Serif 4",Georgia,serif;font-size:2rem}
+.scroll{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.9rem}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--ln)}
+th{background:var(--ac);color:var(--acf)}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.g td{background:var(--soft);font-weight:600}
+td.hi{font-weight:600;color:var(--ok)}
+.tl{display:flex;margin:18px 0 8px;border-top:3px solid var(--ac)}
+.tl div{flex:1;padding-top:10px;font-size:.9rem;position:relative}
+.tl div::before{content:"";position:absolute;top:-9px;left:0;width:14px;height:14px;border-radius:50%;background:var(--ac)}
+.tl .pre{background:var(--wb)}
+.notes{margin-top:16px;display:grid;gap:8px}
+details{border:1px solid var(--ln);border-radius:8px;background:var(--bg)}
+summary{cursor:pointer;padding:10px 14px;font-weight:500;list-style:none;display:flex;gap:10px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";margin-left:auto;color:var(--ac);font-weight:600}
+details[open] summary::after{content:"−"}
+details .t{padding:0 14px 12px;font-size:.95rem}
+.tag{font-size:.78rem;border-radius:99px;padding:1px 9px;white-space:nowrap}
+.tag.o{background:var(--okb);color:var(--ok)}.tag.w{background:var(--wb);color:var(--w)}.tag.i{background:var(--soft);color:var(--ac)}
+.q{background:var(--soft);border-radius:8px;padding:12px 16px;margin:10px 0}
+.mut{color:var(--mut);font-size:.88rem}
+.nav{display:flex;justify-content:space-between;margin-top:12px}
+@media(max-width:560px){.slide{padding:18px}.slide h2{font-size:1.35rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div class="dots" id="dots" aria-label="Slides"></div>
+<div><button class="b" id="all">Expandir todas as notas</button></div></div>
+<div class="slide" id="sl" aria-live="polite"></div>
+<div class="nav"><button class="b" id="prev">Anterior</button><span class="mut" id="cnt"></span><button class="b p" id="next">Próximo</button></div>
+<p class="mut">Use as setas do teclado para navegar. Clique nas notas para expandir.</p>
+</div>
+<script>
+function tb(h,rows){return '<div class="scroll"><table><tr>'+h.map(function(x,i){return '<th'+(i?' class=n':'')+'>'+x+'</th>'}).join('')+'</tr>'+rows.map(function(r){if(typeof r=='string')return '<tr class=g><td colspan='+h.length+'>'+r+'</td></tr>';return '<tr>'+r.map(function(c,i){var hi=/^\*/.test(c);return '<td class="'+(i?'n':'')+(hi?' hi':'')+'">'+c.replace(/^\*/,'')+'</td>'}).join('')+'</tr>'}).join('')+'</table></div>'}
+var T1=tb(["Variável","Total (n=212)","Pré-PN (n=100)","Pós-PN (n=112)","p"],["Perfil",["Sexo masculino","114 (53,8)","56 (56,0)","58 (51,8)","0,58"],["Idade (anos)","59,6 ± 12,1","60,9 ± 12,2","58,4 ± 12,0","0,12"],"Escolaridade (p=0,56)",["Nenhuma","8 (4,0)","5 (5,7)","3 (2,7)",""],["Até 8 anos","105 (52,8)","48 (55,2)","57 (50,9)",""],["Ensino médio","77 (38,7)","30 (34,5)","47 (42,0)",""],["Ensino superior","9 (4,5)","4 (4,6)","5 (4,5)",""],"Etiologia do câncer (p=0,09)",["Cabeça e pescoço","82 (38,7)","37 (37,0)","45 (40,2)",""],["Colo uterino","50 (23,6)","25 (25,0)","25 (22,3)",""],["Esôfago","32 (15,1)","16 (16,0)","16 (14,3)",""],["Canal anal","31 (14,6)","19 (19,0)","12 (10,7)",""],["Pulmão","14 (6,6)","3 (3,0)","11 (9,8)",""],["Bexiga","3 (1,4)","0 (0)","3 (2,7)",""],"Tempo",["Internação (dias), mediana (IIQ)","2 (1–8,25)","10 (7–16,5)","1 (1–2)","*<0,001"]]);
+var T2=tb(["Variável","Categoria","RR (IC 95%)","p"],[["Sexo","Feminino","0,96 (0,63–1,45)","0,84"],["Idade","por ano","1,0 (0,99–1,02)","0,52"],["Escolaridade","Nenhuma","0,81 (0,24–2,64)","0,72"],["","Até 8 anos","0,97 (0,43–2,14)","0,94"],["","9 a 12 anos","0,99 (0,44–2,22)","0,72"],["Etiologia","Bexiga","0,99 (0,27–3,64)","0,99"],["","Cabeça e pescoço","0,89 (0,47–1,69)","0,73"],["","Canal anal","1,09 (0,52–2,26)","0,82"],["","Colo uterino","1,05 (0,49–2,23)","0,89"],["","Esôfago","0,93 (0,45–1,92)","0,85"],["Internação","Tempo (dias)","0,99 (0,88–1,12)","0,95"],["Emergência","Atendimento EA","1,25 (0,88–1,77)","0,21"],["Internação","Hospitalar","1,05 (0,75–1,47)","0,75"]]);
+var N=function(k,h,b){return{k:k,h:h,b:b}};
+var S=[
+{c:1,t:"Navegação de pacientes oncológicos: estudo de coorte retrospectivo",
+ h:'<p>Programa de Pós-Graduação Modelos de Decisão em Saúde</p><p>Disciplina: EPIDEMIOLOGIA ANALÍTICA : ESTUDOS DE CORTE</p><p>Professor: RODRIGO PINHEIRO DE TOLEDO VIANNA</p><p>Alunas: CLAUDIA PALOMA DE LIMA BARBOSA · RADIMILA DOS SANTOS ALMEIDA · TÂNIA BARBOSA TOMAZ</p><p style="margin-top:14px">Moraes MAC et al. Efetividade da navegação de pacientes com câncer em tratamento quimiorradioterápico concomitante: estudo de coorte retrospectivo. Rev Gaúcha Enferm. 2025;46(esp):e2025-0162. DOI 10.1590/1983-1447.2025.2025-0162.pt</p>',n:[]},
+{s:"Artigo 1",t:"Problematização e objetivo",
+ h:'<div class="q">A quimiorradioterapia concomitante aumenta toxicidades, efeitos colaterais simultâneos e reduz a tolerância, o que leva a interrupções, hospitalizações e queda da qualidade de vida.</div><p><b>Objetivo dos autores:</b> verificar a efetividade de um programa de navegação (PN) quanto à completude do tratamento, atendimentos na emergência e internações não planejadas.</p>',
+ n:[N("o","Objetivo relativamente claro","Identifica a população, a intervenção investigada e os resultados que se pretende avaliar. A lacuna é real: poucos estudos nacionais sobre navegação no SUS."),N("w","Cuidado com o termo “efetividade”","Sugere que o programa produziu melhorias, mas o delineamento é observacional e retrospectivo, sem randomização e sem grupo de comparação contemporâneo. O estudo identifica associações, não estabelece isoladamente causalidade.")]},
+{s:"Desfechos",t:"Um desfecho primário e dois secundários",
+ h:'<div class="grid"><div class="box"><b>Primário</b>Completude do tratamento quimiorradioterápico concomitante.</div><div class="box"><b>Secundário</b>Atendimento no serviço de emergência de adultos.</div><div class="box"><b>Secundário</b>Internação hospitalar não planejada.</div></div>',
+ n:[N("o","Desfecho primário","Clinicamente relevante, binário e coerente com o objetivo. O cálculo amostral foi baseado nele."),N("w","Definição pouco operacionalizada","“Conforme programado” depende do critério do oncologista e do tipo de câncer. Não há limiar objetivo (por exemplo, ≥ X% da dose de radioterapia ou número de ciclos)."),N("w","Objetivo × desfecho primário","O objetivo lista três desfechos no mesmo nível, mas o método designa a completude como primária. Isso gera ambiguidade sobre qual conclusão manda."),N("w","Exclusões que enviesam o desfecho","Foram excluídos pacientes que trocaram de protocolo (n=41), foram a óbito (n=14) ou desistiram (n=2), todos potencialmente sem completude. Isso pode inflar a taxa e é um viés de seleção grave. Seria preciso saber se as exclusões foram semelhantes nos dois grupos."),N("i","Erro tipo I e multiplicidade","Erro tipo I é rejeitar H₀ quando ela é verdadeira (falso positivo). Ao fazer vários testes, cresce a chance de pelo menos um falso positivo: 3 testes ≈ 14%, 10 testes ≈ 40% (com α = 0,05). Uma forma de controlar isso é a correção de Bonferroni, que divide α pelo número de testes (α/k); com 3 desfechos, o limiar passaria a ≈ 0,017. O artigo não registra se o protocolo foi pré-especificado, e em estudo retrospectivo os desfechos podem ter sido escolhidos após ver os dados.")]},
+{s:"Interpretação",t:"O programa foi efetivo?",
+ h:'<div class="q">Na análise bruta, a completude diferiu (p &lt; 0,001), mas após o ajuste por exposição e confundidores a associação deixou de ser significativa. Já os desfechos secundários tiveram diferenças significativas.<br><b>Podemos concluir que o programa foi efetivo?</b></div><details><summary>Nossa interpretação</summary><div class="t">Não de forma conclusiva. Há resultados favoráveis, mas é preciso considerar o delineamento observacional, os possíveis fatores de confusão e a ausência de associação ajustada para o desfecho primário. Em estudos de coorte, vários desfechos não têm o mesmo peso científico: a significância de um secundário não significa que a intervenção foi efetiva no objetivo principal.</div></details>',
+ n:[]},
+{s:"Coortes",t:"Formação das coortes e seleção",
+ h:'<div class="grid"><div class="box"><span class="big">287</span><br>elegíveis</div><div class="box"><span class="big">75</span><br>excluídos (26%)<br><span class="mut">troca de protocolo 41, sem dados 18, óbito 14, desistência 2</span></div><div class="box"><span class="big">212</span><br>incluídos</div></div><div class="grid"><div class="box"><b>Pré-PN: 2022, n=100</b>Atendimento convencional.</div><div class="box"><b>Pós-PN: 2023, n=112</b>Atendimento com navegação.</div></div><p class="mut">Dados de prontuário, coletados de janeiro a março de 2025. Hospital público universitário do Sul do Brasil, majoritariamente SUS.</p>',
+ n:[N("o","Pontos positivos","Hospital de grande porte com população do SUS; adultos com indicação clara de quimiorradiação; amostra mínima (168) atingida com 212; segue o STROBE."),N("w","Pontos de atenção","Seis tipos de câncer com prognósticos e protocolos distintos; exclusão de óbitos e trocas; coleta retrospectiva em prontuário (viés de informação e confundimento residual).")]},
+{s:"Linha do tempo",t:"Quando começa o pós-programa?",
+ h:'<div class="tl"><div class="pre">Jan/2022<br><b>Início do período</b></div><div>Nov/2022<br><b>Implantação do PN</b></div><div>Dez/2023<br><b>Fim do período</b></div></div><p><b>Classificação usada:</b> todo o ano de 2022 = pré-PN; todo o ano de 2023 = pós-PN.</p>',
+ n:[N("w","Faltou um washout","O programa foi implementado em novembro de 2022, dentro do período “pré”. Não fica claro como os pacientes de nov/dez 2022 foram classificados. Washout é um período de transição excluído da comparação, para não misturar as fases."),N("w","Viés temporal","É um desenho antes-e-depois: qualquer mudança institucional em 2023 (recursos, fluxos, equipe, pós-pandemia) se confunde com o efeito do programa. Os próprios autores reconhecem o risco."),N("w","Mistura de populações","São seis tipos de câncer, com prognósticos e protocolos distintos.")]},
+{s:"Tabela 1",t:"Características dos pacientes, pré × pós-PN",h:T1+'<p class="mut">p compara os grupos assumindo H₀ verdadeira (sem diferença). Só o tempo de internação rejeita H₀ com α = 0,05.</p>',
+ n:[N("o","Grupos comparáveis no perfil","Sexo (0,58), idade (0,12), escolaridade (0,56) e etiologia (0,09) não rejeitam H₀. Isso não prova igualdade, apenas que os dados não mostram diferença."),N("w","Etiologia limítrofe","p=0,09 com diferenças visíveis (canal anal 19% × 10,7%; pulmão 3% × 9,8%)."),N("w","Tempo de internação não é característica basal","A mediana difere muito (10 × 1 dia), mas é consequência do tratamento, possível mediador do efeito do programa. Ajustar o modelo por ele pode mascarar o efeito.")]},
+{s:"Tabela 2",t:"Regressão multivariada: completude do tratamento",h:T2+'<p class="mut">A exposição principal (pré × pós-PN) não aparece na tabela. Referências: masculino, escolaridade acima de 12 anos, pulmão.</p>',
+ n:[N("o","Modelo adequado ao desfecho","Poisson com variância robusta estima risco relativo diretamente para desfecho binário, e traz IC95%."),N("w","Não é possível concluir ausência de associação","Ausência de significância não é ausência de efeito. Os ICs são largos (ex.: EA, RR 1,25; IC 0,88–1,77, de −12% a +77%), o que indica imprecisão de estimativa."),N("w","Poucos eventos para muitos parâmetros","13 parâmetros para ~46 pacientes sem completude, abaixo da regra de ~10 eventos por parâmetro. Categorias minúsculas (bexiga, n=3) geram IC enorme (0,27–3,64)."),N("w","Nomenclatura","A legenda diz “regressão logística”, mas o método descrito é Poisson com variância robusta.")]},
+{s:"Resultados",t:"Completude do tratamento (desfecho primário)",
+ h:'<div class="grid"><div class="box"><span class="big">66,0%</span><br>pré-PN<br><span class="mut">66 de 100</span></div><div class="box"><span class="big">89,3%</span><br>pós-PN<br><span class="mut">100 de 112</span></div><div class="box"><span class="big">+23,3 p.p.</span><br>diferença absoluta<br><span class="mut">calculada a partir dos percentuais</span></div></div>'+tb(["Desfecho","Pré-PN","Pós-PN","p"],[["Completude","66%","89,3%","*<0,001"],["Atendimento na emergência","50%","31,3%","*0,008"],["Internação não planejada","57%","33%","*0,001"]])+'<p>Após o ajuste multivariado, nenhuma associação significativa com a completude (p &gt; 0,05). Houve aumento da proporção, mas não se demonstrou que ele permanece associado ao programa.</p>',
+ n:[N("w","Inconsistência no texto","A seção Resultados diz que 66 e 100 pacientes “atingiram a completude”, como se fossem os tamanhos dos grupos (100 e 112). O fluxograma mostra que são eventos."),N("o","Consistência entre desfechos","Os três desfechos melhoram na análise bivariada, e os autores reconhecem que o efeito ajustado do primário não foi significativo. Mais de 4 atendimentos de navegação associaram-se a menos internações (29,7% × 49,3%).")]},
+{s:"Metodologia",t:"Variáveis, testes e modelagem",
+ h:'<div class="grid"><div class="box"><b>Variáveis</b>Idade, sexo, escolaridade, tipo de câncer, tempo de internação, nº de atendimentos no PN.</div><div class="box"><b>Normalidade</b>Shapiro-Wilk nas variáveis contínuas.</div><div class="box"><b>Hipóteses</b>Qui-quadrado ou Fisher; t de Student ou Mann-Whitney; α = 0,05.</div><div class="box"><b>Modelagem</b>Poisson com variância robusta, RR ajustado.</div></div>',
+ n:[N("w","Shapiro-Wilk não se aplica à completude","A completude é binária, sem “normalidade” a testar. O teste faz sentido para variáveis contínuas (idade, tempo de internação, nº de atendimentos), mas o texto não diz a quais foi aplicado. Para a completude, o teste adequado é o qui-quadrado."),N("o","Testes coerentes com o tipo de variável","Média/DP ou mediana/IIQ conforme a distribuição; teste t ou Mann-Whitney; qui-quadrado ou Fisher para categóricas."),N("i","H₀ e p-valor","H₀ afirma que não há diferença entre os grupos. O p é a probabilidade de observar uma diferença igual ou maior se H₀ fosse verdadeira. Com p ≤ 0,05, rejeita-se H₀; com p maior, não se rejeita, o que não prova igualdade.")]},
+{s:"Conclusão",t:"Conclusão dos autores e balanço",
+ h:'<p>A efetividade do programa <b>não foi totalmente evidenciada</b>: houve melhora no êxito do tratamento e menos uso de emergência e internações, mas a análise multivariada não confirmou associação significativa. Os autores pedem estudos com outro delineamento e amostra maior.</p><div class="grid"><div class="box" style="border-left-color:var(--ok)"><b>Pontos positivos</b>Tema original no SUS; população complexa; desfecho primário relevante; cálculo amostral; STROBE; honestidade dos autores sobre os limites.</div><div class="box" style="border-left-color:var(--w)"><b>Pontos de atenção</b>Antes-e-depois com viés temporal; sem washout; exclusões enviesam o primário; exposição ausente na Tabela 2; mediadores no modelo; baixo poder.</div></div>',n:[]},
+{s:"Recomendação",t:"Análise de sobrevivência",
+ h:'<p>Uma alternativa para analisar fatores associados à completude, usando o tempo até a interrupção do tratamento.</p>',
+ n:[N("o","Vantagens","A completude depende do tempo. Óbito, troca de protocolo e desistência viram censura ou riscos competitivos, em vez de exclusão. Permite Kaplan-Meier, log-rank e Cox (HR), e o nº de atendimentos como variável dependente do tempo, evitando viés de tempo imortal."),N("w","Cuidados","O evento mais informativo é o tempo até a interrupção, com a conclusão como censura. Exige datas no prontuário e eventos suficientes (~10 por covariável). Não corrige o viés temporal: considerar série temporal interrompida ou grupo controle."),N("i","Proposta","Kaplan-Meier/Cox para tempo até descontinuação; riscos competitivos; PN como exposição principal; Poisson com variância robusta como análise de sensibilidade.")]}
+];
+S.splice(10,0,S.splice(3,1)[0]);
+var i=0,allOpen=false,sl=document.getElementById("sl");
+var dots=document.getElementById("dots");
+S.forEach(function(_,k){var b=document.createElement("button");b.setAttribute("aria-label","Slide "+(k+1));b.onclick=function(){go(k)};dots.appendChild(b)});
+var TG={o:["o","Ponto positivo"],w:["w","Ponto de atenção"],i:["i","Nota metodológica"]};
+function go(k){i=Math.max(0,Math.min(S.length-1,k));var s=S[i];
+ var h=(s.s?'<div class=sec>'+s.s+'</div>':'')+'<h2>'+s.t+'</h2>'+s.h;
+ if(s.n.length)h+='<div class=notes>'+s.n.map(function(n){return '<details'+(allOpen?' open':'')+'><summary><span class="tag '+TG[n.k][0]+'">'+TG[n.k][1]+'</span>'+n.h+'</summary><div class=t>'+n.b+'</div></details>'}).join('')+'</div>';
+ sl.className="slide"+(s.c?" cover":"");sl.innerHTML=h;
+ Array.prototype.forEach.call(dots.children,function(d,j){d.setAttribute("aria-current",j===i)});
+ document.getElementById("cnt").textContent=(i+1)+" / "+S.length;
+ document.getElementById("prev").disabled=i===0;document.getElementById("next").disabled=i===S.length-1;
+ window.scrollTo(0,0)}
+document.getElementById("prev").onclick=function(){go(i-1)};
+document.getElementById("next").onclick=function(){go(i+1)};
+document.getElementById("all").onclick=function(){allOpen=!allOpen;this.textContent=allOpen?"Recolher todas as notas":"Expandir todas as notas";Array.prototype.forEach.call(sl.querySelectorAll("details"),function(d){d.open=allOpen})};
+document.onkeydown=function(e){if(e.key=="ArrowRight")go(i+1);if(e.key=="ArrowLeft")go(i-1)};
+go(0);
+</script>
+</body>
+</html>
